@@ -1,0 +1,12 @@
+{
+	"cityflow_config_file": "examples/config_1x6.json",
+	"thread_num":1,
+	"algo":"DQN",
+	"epochs":10,
+	"num_step":100,
+	"save_freq":1,
+	"batch_size":32,
+	"phase_step":10,
+	"model_out":"model/model_1x6",
+	"result_out":"result/result_1x6"
+}
