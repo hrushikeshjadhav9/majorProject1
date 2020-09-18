@@ -14,7 +14,6 @@ from collections import deque
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
-import tensorflow as tf
 
 class CityFlowEnvM(object):
     '''
@@ -52,7 +51,7 @@ class CityFlowEnvM(object):
             self.current_phase[id_] = self.phase_list[id_][0]
             self.current_phase_time[id_] = 0
         self.get_state() # set self.state_size
-        
+
     def reset(self):
         self.eng.reset()
 
@@ -99,16 +98,16 @@ class CityFlowEnvM(object):
 
         state['start_lane_vehicle_count'] = {lane: get_lane_vehicle_count[lane] for lane in self.start_lane[id_]}
         state['end_lane_vehicle_count'] = {lane: get_lane_vehicle_count[lane] for lane in self.end_lane[id_]}
-        
+
         state['start_lane_waiting_vehicle_count'] = {lane: get_lane_waiting_vehicle_count[lane] for lane in self.start_lane[id_]}
         state['end_lane_waiting_vehicle_count'] = {lane: get_lane_waiting_vehicle_count[lane] for lane in self.end_lane[id_]}
-        
+
         state['start_lane_vehicles'] = {lane: get_lane_vehicles[lane] for lane in self.start_lane[id_]}
         state['end_lane_vehicles'] = {lane: get_lane_vehicles[lane] for lane in self.end_lane[id_]}
-        
+
         state['start_lane_speed'] = {lane: np.sum(list(map(lambda vehicle:vehicle_speed[vehicle], get_lane_vehicles[lane]))) / (get_lane_vehicle_count[lane]+1e-5) for lane in self.start_lane[id_]} # compute start lane mean speed
         state['end_lane_speed'] = {lane: np.sum(list(map(lambda vehicle:vehicle_speed[vehicle], get_lane_vehicles[lane]))) / (get_lane_vehicle_count[lane]+1e-5) for lane in self.end_lane[id_]} # compute end lane mean speed
-        
+
         state['current_phase'] = self.current_phase[id_]
         state['current_phase_time'] = self.current_phase_time[id_]
 
@@ -138,7 +137,7 @@ class CityFlowEnvM(object):
     def get_score(self):
         score = {id_: self.get_score_(id_) for id_ in self.intersection_id}
         return score
-    
+
     def get_score_(self, id_):
         state = self.intersection_info(id_)
         start_lane_waiting_vehicle_count = state['start_lane_waiting_vehicle_count']
@@ -347,10 +346,10 @@ class MDQNAgent(object):
     def __init__(self, config):
         self.intersection = config['intersection_id']
         self.agents = {}
-        self.make_agents(config['intersection_id'], 
-                         config['state_size'], 
-                         config['batch_size'], 
-                         config['phase_list'], 
+        self.make_agents(config['intersection_id'],
+                         config['state_size'],
+                         config['batch_size'],
+                         config['phase_list'],
                          config['env'])
 
     def make_agents(self, intersection, state_size, batch_size, phase_list, env):
@@ -397,10 +396,10 @@ class MDDQNAgent(object):
     def __init__(self, config):
         self.intersection = config['intersection_id']
         self.agents = {}
-        self.make_agents(config['intersection_id'], 
-                         config['state_size'], 
-                         config['batch_size'], 
-                         config['phase_list'], 
+        self.make_agents(config['intersection_id'],
+                         config['state_size'],
+                         config['batch_size'],
+                         config['phase_list'],
                          config['env'])
 
     def make_agents(self, intersection, state_size, batch_size, phase_list, env):
@@ -492,9 +491,9 @@ def parse_roadnet(roadnetFile):
 
 def getAgent(config):
     if config['algo'] == 'DQN':
-        return MDDQNAgent(config)
-    elif config['algo'] == 'DDQN':
         return MDQNAgent(config)
+    elif config['algo'] == 'DDQN':
+        return MDDQNAgent(config)
     else:
         print ("Wrong input algo")
         sys.exit(0)
@@ -521,12 +520,12 @@ def trainModel2(config):
             epoch_reward = {id_:0 for id_ in config['intersection_id']} # for every agent
             epoch_score = {id_:0 for id_ in config['intersection_id']} # for everg agent
             while epoch_length < config['num_step']:
-                
+
                 action = Agent.choose_action(state) # index of action
                 action_phase = {}
                 for id_, a in action.items():
                     action_phase[id_] = phase_list[id_][a]
-                
+
                 next_state, reward = env.step(action_phase) # one step
                 score = env.get_score()
 
@@ -574,12 +573,12 @@ def trainModel2(config):
             # compute episode mean reward
             for id_ in config['intersection_id']:
                 epoch_reward[id_] /= config['num_step']
-            
+
             # save episode rewards
             for id_ in config['intersection_id']:
                 epoch_rewards[id_].append(epoch_reward[id_])
                 epoch_scores[id_].append(epoch_score[id_])
-            
+
             print_episode_reward = {'_'.join(k.split('_')[1:]):v for k, v in epoch_reward.items()}
             print_episode_score = {'_'.join(k.split('_')[1:]):v for k, v in epoch_score.items()}
             print('\n')
@@ -590,7 +589,7 @@ def trainModel2(config):
                 if config['algo'] == 'MDQN':
                     # Magent.save(model_dir + "/{}-ckpt".format(args.algo), i+1)
                     Magent.save(config['model_out'] + "/{}-{}.h5".format(config['algo'], i+1))
-                    
+
                 # save reward to file
                 df = pd.DataFrame(epoch_rewards)
                 df.to_csv(config['result_out'] + '/rewards.csv', index=None)
@@ -601,7 +600,7 @@ def trainModel2(config):
                 # save figure
                 plot_data_lists([epoch_rewards[id_] for id_ in config['intersection_id']], config['intersection_id'], figure_name=config['result_out'] + '/rewards.pdf')
                 plot_data_lists([epoch_scores[id_] for id_ in config['intersection_id']], config['intersection_id'], figure_name=config['result_out'] + '/scores.pdf')
-    
+
     df = pd.DataFrame(epoch_rewards)
     df.to_csv(config['result_out'] + "/rewards.csv", index=None)
 
@@ -624,7 +623,7 @@ def trainModel(config):
     epoch_scores = {id_:[] for id_ in config['intersection_id']}
     num_step = config['num_step']
     phase_step = config['phase_step']
-    intersection_id = config['intersection_id']
+    intersection_id = config['intersection_id'] # list of all intersections
 
     with tqdm(total=epochs * num_step) as pbar:
         for epoch in range(epochs):
@@ -633,7 +632,7 @@ def trainModel(config):
 
             epoch_length = 0
             epoch_reward = {id_:0 for id_ in intersection_id} # for every agent
-            epoch_score = {id_:0 for id_ in intersection_id} # for everg agent 
+            epoch_score = {id_:0 for id_ in intersection_id} # for everg agent
 
             while epoch_length < num_step:
                 action = Agent.choose_action(state)
@@ -648,12 +647,12 @@ def trainModel(config):
                     next_state, reward = env.step(action_phase)
                     score = env.get_score()
                     for id_ in intersection_id:
-                        reward[id_] = reward[id_] + reward_[id_]
-                        score[id_] = score[id_] + score_[id_]
+                        reward[id_] = reward[id_] + reward_[id_] # reward_[id_] is reward of step 1
+                        score[id_] = score[id_] + score_[id_] # likewise
 
                 for id_ in intersection_id:
-                    reward[id_] = reward[id_] / phase_step
-                    score[id_] = score[id_] / phase_step
+                    reward[id_] = reward[id_] / phase_step # Average reward of an epoch
+                    score[id_] = score[id_] / phase_step # likewise
 
                 for id_ in intersection_id:
                     epoch_reward[id_] += reward[id_]
@@ -669,9 +668,11 @@ def trainModel(config):
                 state = next_state
 
                 if epoch_length > learning_start and total_step % update_model_freq == 0 :
+                     # If agent has sufficient experience tuples (32), go ahead with the replay.
                     if len(Agent.agents[intersection_id[0]].memory) > config['batch_size']:
                         Agent.replay()
 
+                # Update target network with weights of online network.
                 if epoch_length > learning_start and total_step % update_target_model_freq == 0 :
                     Agent.update_target_network()
 
@@ -736,20 +737,20 @@ def plot_data_lists(data_list, label_list, length=10, height=6, x_label='x', y_l
     if save:
         matplotlib.use('PDF')
     import matplotlib.pyplot as plt
-    
+
 
     fig, ax = plt.subplots(figsize=(length, height))
     ax.grid(True)
 
     for data, label in zip(data_list, label_list):
         ax.plot(data, label=label)
-    
+
     ax.plot()
     ax.set_xlabel(x_label, fontsize=label_fsize)
     ax.set_ylabel(y_label, fontsize=label_fsize)
     ax.legend()
     ax.grid(True)
-    
+
     if save:
         plt.savefig(figure_name)
     else:
@@ -760,7 +761,7 @@ def main():
     parser.add_argument('--config', type=str, required=True, help='Input config file')
     args = parser.parse_args()
 
-    infer = False
+    # infer = False
 
     config = json.load(open(args.config))
 
@@ -769,9 +770,9 @@ def main():
     roadnetFile = cityflow_config['dir'] + cityflow_config['roadnetFile']
     json.dump(cityflow_config, open(config["cityflow_config_file"], 'w'))
 
-    config["lane_phase_info"] = parse_roadnet(roadnetFile)
+    config['lane_phase_info'] = parse_roadnet(roadnetFile)
     intersection_id = list(config['lane_phase_info'].keys())
-    config["intersection_id"] = intersection_id
+    config['intersection_id'] = intersection_id
     phase_list = {id_:config["lane_phase_info"][id_]["phase"] for id_ in intersection_id}
     config["phase_list"] = phase_list
 
@@ -793,11 +794,11 @@ def main():
 
     config['Agent'] = getAgent(config)
 
-    if not infer:
+    if not config["infer"]:
         trainModel(config)
     else:
         inferModel(config)
-    
+
 
 if __name__ == '__main__':
     main()
