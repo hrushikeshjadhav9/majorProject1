@@ -611,6 +611,7 @@ def trainModel2(config):
     plot_data_lists([epoch_scores[id_] for id_ in config['intersection_id']], config['intersection_id'], figure_name=config['result_out'] + '/scores.pdf')
 
 def trainModel(config):
+    config['saveReplay'] = True
     epochs = config['epochs']
     total_step = 0
     env = config['env']
