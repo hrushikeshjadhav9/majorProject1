@@ -4,7 +4,7 @@
 	"algo":"DQN",
 	"infer":false,
 	"epochs":25,
-	"num_step":700,
+	"num_step":2500,
 	"save_freq":1,
 	"batch_size":32,
 	"phase_step":5,
